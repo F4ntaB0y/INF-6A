@@ -18,7 +18,7 @@
 
 ![alt text](image_5.png)
 
-6. pilih yang free (6 month)
+6. Pilih yang free (6 month)
 
 ![alt text](image_6.png)
 
