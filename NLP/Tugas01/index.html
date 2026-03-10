@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pencarian Kelompok - IR + Gemini AI</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for better appearance */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .matrix-cell {
+            transition: all 0.3s ease;
+        }
+
+        .matrix-cell:hover {
+            background-color: #f3f4f6;
+        }
+
+        .rotate-text {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #f59e0b;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen font-sans pb-20 text-slate-800 antialiased selection:bg-blue-200 selection:text-blue-900">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="container mx-auto px-4 md:px-8 py-5 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700">Presentasi NLP Kelompok 6</h1>
+                <p class="mt-1 text-sm font-medium text-slate-500">Tugas Kelompok: Implementasi OBE</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8 space-y-8">
+
+        <!-- 1. MODUL DATA ENGINEER -->
+        <section id="data-engineer" class="bg-white rounded-xl shadow-md p-6 border-l-8 border-green-500">
+            <div class="mb-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-green-700 uppercase tracking-wider">Peran 1: Data Engineer</h2>
+                    <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">Preprocessing
+                        & Dataset</span>
+                </div>
+                <div class="mt-3 text-sm text-gray-700 bg-green-50 border border-green-100 rounded-lg p-4">
+                    <p class="font-bold text-green-800 mb-2">Tugas & Tanggung Jawab:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Mempersiapkan dan memuat dataset dokumen yang akan digunakan.</li>
+                        <li>Melakukan tahapan <i>preprocessing</i> teks (pembersihan tanda baca, <i>case folding</i>).</li>
+                        <li>Membuat dan menyusun representasi kata unik (<i>vocabulary</i>) dari seluruh dokumen.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 items-stretch">
+                <div class="flex flex-col">
+                    <h3 class="font-semibold mb-2">Dataset:</h3>
+                    <div id="raw-data-list" class="text-sm space-y-2 flex-1 bg-gray-50 p-3 rounded border"></div>
+                </div>
+                <div class="flex flex-col">
+                    <h3 class="font-semibold mb-2">Vocabulary (Unique Terms):</h3>
+                    <div id="vocabulary-list"
+                        class="flex flex-wrap gap-2 flex-1 content-start bg-gray-50 p-3 rounded border"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. MODUL BoW ENGINEER -->
+        <section id="bow-engineer" class="bg-white rounded-xl shadow-md p-6 border-l-8 border-blue-500">
+            <div class="mb-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-blue-700 uppercase tracking-wider">Peran 2: BoW Engineer</h2>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Document-Term
+                        Matrix</span>
+                </div>
+                <div class="mt-3 text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-lg p-4">
+                    <p class="font-bold text-blue-800 mb-2">Tugas & Tanggung Jawab:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Menerapkan representasi numerik menggunakan penalaran <i>Bag of Words</i>.</li>
+                        <li>Menghitung frekuensi kemunculan setiap kata (<i>Term Frequency</i>) pada setiap dokumen.</li>
+                        <li>Membuat dan menata data tekstual dalam bentuk <i>Document-Term Matrix</i> (DTM).</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border-collapse text-[10px] text-left">
+                    <thead id="dtm-head" class="bg-gray-100"></thead>
+                    <tbody id="dtm-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 3. MODUL SIMILARITY ENGINEER -->
+        <section id="similarity-engineer" class="bg-white rounded-xl shadow-md p-6 border-l-8 border-purple-500">
+            <div class="mb-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-purple-700 uppercase tracking-wider">Peran 3: Similarity Engineer</h2>
+                    <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded">Cosine
+                        Similarity Matrix</span>
+                </div>
+                <div class="mt-3 text-sm text-gray-700 bg-purple-50 border border-purple-100 rounded-lg p-4">
+                    <p class="font-bold text-purple-800 mb-2">Tugas & Tanggung Jawab:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Mengimplementasikan algoritma <i>Cosine Similarity</i> untuk menghitung kedekatan fitur vektor.</li>
+                        <li>Melakukan perhitungan matriks skor kemiripan untuk mendeteksi relasi secara matematis.</li>
+                        <li>Mengidentifikasi dan menampilkan pasangan dokumen yang paling mirip dan paling berbeda.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 overflow-x-auto">
+                    <table class="min-w-full border-collapse text-xs text-center border">
+                        <thead id="sim-head" class="bg-gray-100"></thead>
+                        <tbody id="sim-body"></tbody>
+                    </table>
+                </div>
+                <div class="space-y-4 text-sm flex flex-col h-full">
+                    <div class="bg-green-50 p-4 rounded border border-green-200 flex-1 flex flex-col">
+                        <h4 class="font-bold text-green-700 mb-2 border-b border-green-200 pb-1">Paling Mirip:</h4>
+                        <div id="most-similar" class="text-green-900 font-medium break-words overflow-y-auto max-h-32 flex-grow">-</div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded border border-red-200 flex-1 flex flex-col">
+                        <h4 class="font-bold text-red-700 mb-2 border-b border-red-200 pb-1">Paling Berbeda:</h4>
+                        <div id="most-different" class="text-red-900 font-medium break-words overflow-y-auto max-h-32 flex-grow">-</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. MODUL SEARCH ENGINEER -->
+        <section id="search-engineer" class="bg-white rounded-xl shadow-md p-6 border-l-8 border-orange-500">
+            <div class="mb-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-orange-700 uppercase tracking-wider">Peran 4: Search Engineer</h2>
+                    <span class="bg-orange-100 text-orange-800 text-xs font-semibold px-2.5 py-0.5 rounded">Ranking &
+                        Retrieval</span>
+                </div>
+                <div class="mt-3 text-sm text-gray-700 bg-orange-50 border border-orange-100 rounded-lg p-4">
+                    <p class="font-bold text-orange-800 mb-2">Tugas & Tanggung Jawab:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Menerima <i>query</i> pencarian teks pengguna dan memprosesnya menggunakan metode <i>preprocessing</i>.</li>
+                        <li>Menghitung skor relevansi <i>Cosine Similarity</i> secara <i>real-time</i> antar <i>query</i> dan basis dokumen.</li>
+                        <li>Memberikan peringkat (<i>ranking</i>) hasil pencarian untuk diurutkan dari dokumen yang paling relevan.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="max-w-3xl mx-auto space-y-6">
+                <div class="flex gap-2">
+                    <input type="text" id="query-input" placeholder="Masukkan query (contoh: kecerdasan buatan)..."
+                        class="flex-1 border-2 border-orange-200 p-3 rounded-lg focus:outline-none focus:border-orange-500 transition-all">
+                    <button onclick="handleSearch()"
+                        class="bg-orange-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-orange-600 transition-all">CARI</button>
+                </div>
+
+
+                <div id="search-results" class="space-y-4">
+                    <p class="text-center text-gray-500 italic">Masukkan query untuk melihat ranking dokumen.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- DATA ENGINEER MODULE ---
+        const documents = [
+            // D1: Fokus Kecerdasan, Buatan, Teknologi, Manusia
+            "Kecerdasan buatan adalah teknologi masa depan. Teknologi kecerdasan buatan membantu pekerjaan manusia. Manusia sangat terbantu oleh kecerdasan buatan.",
+
+            // D2: Fokus Komputer, Teknologi, Manusia, Sistem
+            "Komputer adalah teknologi penting. Teknologi komputer sangat canggih. Sistem komputer dan teknologi komputer memudahkan pekerjaan manusia.",
+
+            // D3: Fokus Data, Ilmu, Analisis
+            "Data adalah informasi penting. Pengolahan data dan analisis data sangat penting dalam ilmu data. Ilmu data memproses data besar.",
+
+            // D4: Fokus Pemrograman, Logika, Komputer, Sistem
+            "Pemrograman komputer membutuhkan logika. Belajar pemrograman berarti belajar logika. Logika pemrograman membuat sistem komputer bekerja dengan baik.",
+
+            // D5: Fokus Kecerdasan, Buatan, Data, Sistem
+            "Sistem kecerdasan buatan membutuhkan data. Tanpa data kecerdasan buatan tidak bekerja. Data besar membuat kecerdasan buatan pintar memproses data.",
+
+            // D6: Fokus Teknologi, Manusia, Komputer, Belajar
+            "Teknologi dibuat oleh manusia untuk manusia. Perkembangan teknologi membantu manusia. Manusia harus terus belajar teknologi komputer agar maju.",
+
+            // D7: Fokus Sistem, Analisis, Data, Komputer
+            "Sistem analisis data sangat penting. Analisis data menghasilkan sistem yang baik. Sistem komputer memproses analisis data tersebut dengan cepat.",
+
+            // D8: Fokus Komputer, Pemrograman, Bahasa, Manusia
+            "Komputer bekerja menggunakan bahasa pemrograman. Bahasa pemrograman menghubungkan manusia dan komputer. Belajar bahasa pemrograman komputer sangat penting bagi manusia.",
+
+            // D9: Fokus Ilmu, Data, Kecerdasan, Buatan
+            "Ilmu data dan kecerdasan buatan berkaitan erat. Kecerdasan buatan menggunakan ilmu data. Ilmu data memajukan kecerdasan buatan dalam memproses informasi.",
+
+            // D10: Fokus Sistem, Komputer, Logika, Pemrograman
+            "Sistem komputer berjalan dengan logika. Logika komputer mengatur sistem. Tanpa logika sistem komputer tidak bisa menjalankan bahasa pemrograman."
+        ];
+
+        let vocabulary = [];
+        let dtm = [];
+
+        function preprocess(text) {
+            return text.toLowerCase()
+                .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+                .split(/\s+/)
+                .filter(w => w.length > 2);
+        }
+
+        function initDataEngineering() {
+            const rawList = document.getElementById('raw-data-list');
+            const vocabDiv = document.getElementById('vocabulary-list');
+            let allWords = [];
+            documents.forEach((doc, idx) => {
+                rawList.innerHTML += `<div class='p-1 border-b'><span class='font-bold'>D${idx + 1}:</span> ${doc}</div>`;
+                allWords = [...allWords, ...preprocess(doc)];
+            });
+            vocabulary = [...new Set(allWords)].sort();
+            vocabulary.forEach(word => {
+                vocabDiv.innerHTML += `<span class='bg-gray-200 px-2 py-1 rounded text-xs'>${word}</span>`;
+            });
+        }
+
+        // --- BoW ENGINEER MODULE ---
+        function buildDTM() {
+            dtm = documents.map(doc => {
+                const words = preprocess(doc);
+                const row = new Array(vocabulary.length).fill(0);
+                words.forEach(word => {
+                    const idx = vocabulary.indexOf(word);
+                    if (idx !== -1) row[idx]++;
+                });
+                return row;
+            });
+
+            const head = document.getElementById('dtm-head');
+            const body = document.getElementById('dtm-body');
+            let headerHtml = `<tr><th class="p-1 border">ID</th>`;
+            vocabulary.forEach(word => headerHtml += `<th class="p-1 border text-center"><div class="rotate-text mx-auto h-16">${word}</div></th>`);
+            head.innerHTML = headerHtml + `</tr>`;
+
+            dtm.forEach((row, i) => {
+                let rowHtml = `<tr><td class="p-1 border font-bold bg-gray-50 text-center">D${i + 1}</td>`;
+                row.forEach(val => {
+                    rowHtml += `<td class="p-1 border text-center ${val > 0 ? 'bg-blue-50 font-bold text-blue-700' : 'text-gray-300'}">${val}</td>`;
+                });
+                body.innerHTML += rowHtml + `</tr>`;
+            });
+        }
+
+        // --- SIMILARITY ENGINEER MODULE ---
+        function cosineSimilarity(vecA, vecB) {
+            let dotProduct = 0, normA = 0, normB = 0;
+            for (let i = 0; i < vecA.length; i++) {
+                dotProduct += vecA[i] * vecB[i];
+                normA += vecA[i] * vecA[i];
+                normB += vecB[i] * vecB[i];
+            }
+            if (normA === 0 || normB === 0) return 0;
+            return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+        }
+
+        function calculateSimilarityMatrix() {
+            const simHead = document.getElementById('sim-head');
+            const simBody = document.getElementById('sim-body');
+            const size = documents.length;
+            let maxSim = -1, minSim = 2;
+            let bestPairs = [], worstPairs = [];
+
+            let headHtml = `<tr><th class="p-2 border"></th>`;
+            for (let i = 0; i < size; i++) headHtml += `<th class="p-2 border">D${i + 1}</th>`;
+            simHead.innerHTML = headHtml + `</tr>`;
+
+            for (let i = 0; i < size; i++) {
+                let rowHtml = `<tr><td class="p-2 border font-bold bg-gray-50">D${i + 1}</td>`;
+                for (let j = 0; j < size; j++) {
+                    const sim = cosineSimilarity(dtm[i], dtm[j]);
+                    const displayVal = sim.toFixed(2);
+                    let bgColor = `rgba(147, 51, 234, ${sim})`;
+                    rowHtml += `<td class="p-2 border" style="background-color: ${i === j ? '#f3f4f6' : bgColor}">${displayVal}</td>`;
+                    if (i < j) {
+                        const EPSILON = 1e-9;
+                        if (sim > maxSim + EPSILON) { 
+                            maxSim = sim; 
+                            bestPairs = [`D${i + 1} & D${j + 1}`]; 
+                        } else if (Math.abs(sim - maxSim) < EPSILON) {
+                            bestPairs.push(`D${i + 1} & D${j + 1}`);
+                        }
+
+                        if (sim < minSim - EPSILON) { 
+                            minSim = sim; 
+                            worstPairs = [`D${i + 1} & D${j + 1}`]; 
+                        } else if (Math.abs(sim - minSim) < EPSILON) {
+                            worstPairs.push(`D${i + 1} & D${j + 1}`);
+                        }
+                    }
+                }
+                simBody.innerHTML += rowHtml + `</tr>`;
+            }
+            
+            document.getElementById('most-similar').innerHTML = bestPairs.length > 0 
+                ? `${bestPairs.join('<br>')} <br><span class="text-xs text-gray-500 mt-1 block">Skor: ${maxSim.toFixed(2)}</span>` 
+                : '-';
+            
+            document.getElementById('most-different').innerHTML = worstPairs.length > 0 
+                ? `${worstPairs.join('<br>')} <br><span class="text-xs text-gray-500 mt-1 block">Skor: ${minSim.toFixed(2)}</span>` 
+                : '-';
+        }
+
+        // --- SEARCH ENGINEER MODULE ---
+        async function handleSearch() {
+            const query = document.getElementById('query-input').value;
+            if (!query.trim()) return;
+
+            const queryWords = preprocess(query);
+            const queryVec = new Array(vocabulary.length).fill(0);
+            queryWords.forEach(word => {
+                const idx = vocabulary.indexOf(word);
+                if (idx !== -1) queryVec[idx]++;
+            });
+
+            const scores = dtm.map((docVec, idx) => ({
+                id: idx + 1,
+                text: documents[idx],
+                score: cosineSimilarity(queryVec, docVec)
+            }));
+
+            scores.sort((a, b) => b.score - a.score);
+
+            // Tampilkan Hasil
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = `<h4 class="font-bold text-lg">Hasil Rangking untuk: "${query}"</h4>`;
+
+            scores.forEach((res, index) => {
+                resultsContainer.innerHTML += `
+                    <div class="p-4 border rounded-lg flex items-center gap-4 transition-all hover:shadow-md ${res.score > 0 ? 'bg-white border-orange-200' : 'bg-gray-50 opacity-60'}">
+                        <div class="bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">#${index + 1}</div>
+                        <div class="flex-1">
+                            <p class="${res.score > 0 ? 'font-medium' : ''}">${res.text}</p>
+                            <div class="text-[10px] font-mono text-gray-500">Cosine Similarity Score: ${res.score.toFixed(4)}</div>
+                        </div>
+                        <div class="text-xs font-bold text-gray-400">D${res.id}</div>
+                    </div>
+                `;
+            });
+        }
+
+        async function explainQueryAI(query, topResult) {
+            const helperBox = document.getElementById('ai-query-helper');
+            const helperLoader = document.getElementById('query-loader');
+            const helperText = document.getElementById('ai-helper-text');
+
+            helperBox.classList.remove('hidden');
+            helperLoader.classList.remove('hidden');
+
+
+            let prompt = "";
+            if (topResult.score > 0) {
+                prompt = `User mencari: "${query}". Dokumen paling relevan yang ditemukan adalah: "${topResult.text}". \nJelaskan secara singkat (maks 25 kata) mengapa dokumen ini cocok dengan query tersebut.`;
+            } else {
+                prompt = `User mencari: "${query}". Tidak ditemukan dokumen yang cocok dari dataset ini. \nSebutkan 1-2 kata kunci lain yang ada di dataset (seperti teknologi, komputer, sains, logika) yang mungkin ingin dicari user.`;
+            }
+
+            const explanation = await callGemini(prompt, "Anda adalah asisten pencarian yang ramah dan membantu.");
+
+            helperLoader.classList.add('hidden');
+            helperText.innerText = explanation;
+        }
+
+        window.onload = () => {
+            initDataEngineering();
+            buildDTM();
+            calculateSimilarityMatrix();
+        };
+    </script>
+</body>
+
+</html>
