@@ -17,7 +17,8 @@
 9. Storage Setting -> 30Gb
 10. Klik Launch Instance
 11. Pastikan Alert Success
-    ![alt text](image-6.png)
     ![alt text](image-6a.png)
+    ![alt text](image-6.png)
 12. Pastikan nama sesuai -> klik Instance
     ![alt text](image-7.png)
+
