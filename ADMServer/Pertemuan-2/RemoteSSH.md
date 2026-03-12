@@ -23,9 +23,10 @@
 - Klik Open
 - Masukan username sesuai instance
 
+![alt text](image-11.png)
+
 ![alt text](image-10.png)
 
-![alt text](image-11.png)
 ![alt text](image-12.png)
 
 4. "Sudo apt-get Update" (Update OS) lanjut "sudo apt-get Upgrade"
